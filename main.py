@@ -55,13 +55,18 @@ class Proteins:
     def gyration(self):
         aveGy = 0
         minGy = -1
+       
         for chain in self.chains:
+            straight = False
             mx = 0
             my = 0
             sum = 0
             for res in chain:
                 mx += res.x
                 my += res.y
+                if(res.y == len(chain)-1):
+                    straight = True
+                    
             mx /= float(len(chain))
             my /= float(len(chain))
 
@@ -71,11 +76,15 @@ class Proteins:
             gy = sum / float(len(chain))
             gy = gy**(1/2)
 
-            aveGy += gy
+            if straight:
+                aveGy += (4*gy) #to account for the 4-fold rotational symmetry
+            else:
+                aveGy += (8*gy) #to account for the 4-fold rotational symmetry and reflection
+                
             if minGy == -1 or gy < minGy:
                 minGy = gy
 
-        aveGy /= float(len(self.chains))
+        aveGy /= float(8*len(self.chains) - 4) #accounting for 4 rotations, reflection minus 4 for the non-reflection of the straight chains
 
         print("Min Gyration: " + str(minGy))
         print("Ave Gyration: " + str(aveGy))
@@ -120,26 +129,29 @@ class Proteins:
                 return True
         return False
 
-    def recGen(self, N, chain):
+    def recGen(self, N, chain, right):
         if N == 0:
             return [chain]
         else:
             out = []
-            b1 = self.add(-1,chain)
+
+            if right:
+                b1 = self.add(-1,chain)
+                if not self.intersects(b1):
+                    out += self.recGen(N-1,b1, right)
             b2 = self.add(0,chain)
-            b3 = self.add(1,chain)
-            if not self.intersects(b1):
-                out += self.recGen(N-1,b1)
             if not self.intersects(b2):
-                out += self.recGen(N-1,b2)
+                out += self.recGen(N-1,b2, right)
+            b3 = self.add(1,chain)
             if not self.intersects(b3):
-                out += self.recGen(N-1,b3)
+                out += self.recGen(N-1,b3, True)
+                
 
             return out
 
     def __init__(self, size):
         chain = [Res(0,0), Res(0,1)]
-        self.chains = self.recGen(size-2, chain)
+        self.chains = self.recGen(size-2, chain, False)
 
 
 class Res:
@@ -154,20 +166,23 @@ class Res:
 #p = Protein([1,1,0,0,1,-1])
 
 for i in range(4,17):
+    print("i=" + str(i))
     start = time.clock()*1000000
     p = Proteins(i)
+    mid = time.clock()*1000000
+    p.gyration()
     end = time.clock()*1000000
 
-    print("i=" + str(i))
-    print(len(p.chains))
-    print(str(end-start) + " micros")
-    p.gyration()
+    print("Total non-intersecting chains: " + str(8*len(p.chains)-4))
+    print("Generation: " + str(mid-start) + " micros")
+    print("Gyration  : " + str(end-mid) + " micros")
+    print("Total     : " + str(end-start) + " micros")
     print("-----")
 
 #3.
-# this code has the complexity t=0.4736e^(1.082x) in microseconds (R^2 = 0.998)
-# this means that it would take 93,944 years to compute N = 40
-# If N = 100, it would take 1.47 * 10^33 years to compute
+# this code has the complexity t=0.6855e^(0.9806N) in microseconds (R^2 = 0.998)
+# this means that it would take 2,354.9 years to compute N = 40
+# If N = 100, it would take 8.397 * 10^28 years to compute
 # The significance of this is that this extremely simple model cannot handle relatively small values of N.
 # The one optimization that could be made is if I used a lookup table grid instead of a chain of polymers as this would make looking up individual units O(1) instead of O(n)
 # One could speed up the search by pruning chains with three consecutive same-handed turns. This would speed up the process by 22.2% (2/9) as there are 2 such handed turns every three steps.
