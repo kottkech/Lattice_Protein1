@@ -1,0 +1,12 @@
+#---LAB 2---
+'''
+1. I note that as chain length increases, the acceptance rate decreases in what seems to be a negative log curve. This would make sense as when chain length increases, the chance that any two residues are overlapping increases.
+2. Go Latice
+In this case, the minimal energy is -24 corresponding to the starting state of the protein given. Initially, the energy of the system averages around -20.5, but as the temperature is lowered, the energy settles to -23 and remains constant. I attribute the significance of the -23 state to be that this is the energy that is balanced by the greatest entropy.
+Random Protein
+In the case of the random protein, the initial energy begins higher, and it takes more time for the protein to fold into a stable configuration, but when it settles, it does so at an energy of -24.
+When the initial temperature is lowered, the energy of the protein almost instantly drops to -23 and stays there
+This is because the temperature is no longer high enough to support a exploration of higher energy states.
+3.Go Latice 2
+Similar to the first go latice, this run had an initial energy that was high but eventually settled to -24 and stayed there.
+'''
